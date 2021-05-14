@@ -189,8 +189,6 @@ partitioned by (data String)
 clustered by (id) into 256 buckets
 stored as parquet tblproperties('parquet.compress'='SNAPPY');
 
-
-
 create table pop_parquet(
     zipcode int,
     tal_population int,
