@@ -547,3 +547,175 @@ https://www.mongodb.com/try/download/compass?tck=docs_compass
 
 sudo dpkg -i mongodb-compass_1.26.1_amd64.deb
 
+###############
+# Agregação
+
+# count
+db.<nomeCollection>.count()
+db.<nomeCollection>.count(<filtro>)
+
+db.cliente.count()
+db.cliente.count({cidade: "Sao Paulo"})
+db.cliente.find({cidade: "Sao Paulo"}).count()
+
+# distinct
+db.<nomeCollection>.distinct("<atributo>")
+db.cliente.distinct("nome")
+
+# estimatedDocumentCount
+db.cliente.estimatedDocumentCount()
+
+# pipeline
+db.<nomeCollection>.aggregate([
+    {$<estagio>: <parametros>},
+    {$<estagio>: <operadoresExpressao>},
+    {$<estagio>: <parametros>, <operadoresExpressao>},
+])
+
+# match
+db.funcionarios.aggregate([
+    { $match: { status: "Ativo" } }
+])
+
+# group
+# $sum, $avg, $min, $max, $first, $last, $push, $addToSet, $stdDevPop, $stdDevSamp
+db.funcionarios.aggregate(
+    { $group: { _id: "$setor", total: {$sum: "$vendas"} } }
+)
+
+# match, group, sort, limit
+db.funcionarios.aggregate([
+    { $match: { status: "Ativo" } },
+    { $group: { _id: "$setor", total: {$sum: "$vendas"} } },
+    { $sort: {_id: 1 } },
+    { $limit: 10 }
+])
+
+# exercicios
+# alunos.csv
+db.escola
+use escola
+db.createCollection("alunos")
+
+db.alunos.aggregate(
+    { $group: { _id: "$ano_ingresso", nivel_por_ano: { $addToSet: "$nivel"} } },
+    { $sort: { ano_ingresso: 1 } },
+)
+
+db.alunos.aggregate(
+    { $group: { _id: "$id_curso", qtd_alunos: { $sum: 1 } } },
+    { $sort: { id_curso: 1 } },
+)
+
+db.alunos.aggregate([
+    { $match: { id_curso: 1222 } },
+    { $group: { _id: "$ano_ingresso", qtd_alunos: { $sum: 1 } } },
+    { $sort: { ano_ingresso: 1 } },
+])
+
+db.alunos.aggregate(
+    { $match: { nivel: "M" } },
+)
+
+db.alunos.aggregate([
+    { $match: { nivel: "M" } },
+    { $group: { _id: "$id_curso", ultimo_ano: { $max: "$ano_ingresso" } } },
+    { $sort: { id_curso: 1 } }
+])
+
+db.alunos.aggregate([
+    { $match: { nivel: "M" } },
+    { $group: { _id: "$id_curso", ultimo_ano: { $max: "$ano_ingresso" } } },
+    { $sort: { ultimo_ano: 1 } }
+])
+
+db.alunos.aggregate([
+    { $match: { nivel: "M" } },
+    { $group: { _id: "$id_curso", ultimo_ano: { $max: "$ano_ingresso" } } },
+    { $sort: { ultimo_ano: 1 } },
+    { $limit: 5 }
+])
+
+#############
+# Join
+
+# let outer join
+db.funcionario.aggregate([
+{ 
+    $lookup: {
+        from: "vendas",
+        localField: "cod_func",
+        foreignField: "cod_func",
+        as: "vendasFuncionario"
+    },
+    { 
+        $project: { "_id": 0, "cod_func": 1, "vendasFuncionario.cod_cliente": 1 }
+    }
+}
+])
+
+# exercicios 
+# cursos.csv
+db.escola
+use escola
+db.createCollection("cursos")
+
+db.alunos.aggregate([
+{ 
+    $lookup: {
+        from: "cursos",
+        localField: "id_curso",
+        foreignField: "id_curso",
+        as: "alunos_cursos"
+    }
+}
+])
+
+db.alunos.aggregate([
+   { 
+        $lookup: {
+            from: "cursos",
+            localField: "id_curso",
+            foreignField: "id_curso",
+            as: "aluno_cursos"
+        }
+    },
+    { 
+        $project: { 
+            "_id": 0, 
+            "id_discente": 1, 
+            "nivel": 1, 
+            "aluno_cursos.id_curso": 1,
+            "aluno_cursos.id_unidade": 1,  
+            "aluno_cursos.nome": 1 
+        }
+    }
+])
+
+#############
+# Replica Set
+
+# visualizar configuracao
+rs.conf()
+# status
+rs.status()
+{
+    "ok": 0
+    "errmsg": "not running with --replSet",
+    "code": 76,
+    "codeName": "NoReplicationEnabled"
+}
+
+### SHARD (dados fragmentados no nivel de collection)
+## shard (subconjunto de dados), 
+# config server (metadados, config de cluster) 
+# mongos (interface cliente/sharded cluster)
+
+################
+# MONGO DB ATLAS
+# DBaaS (Database as a Service)
+https://www.mongodb.com/cloud/atlas 
+
+user: helio
+senha: 2hjc2XFNjUVZcWJB
+ip: 179.113.55.159
